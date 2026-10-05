@@ -17,10 +17,15 @@ function heroScrollState(distance, viewportHeight, reducedMotion = false) {
   };
 }
 
+function formatCoordinate(axis, value) {
+  const number = Math.max(0, Math.min(9999.9, Number(value) || 0));
+  return axis + ' ' + number.toFixed(1).padStart(6, '0');
+}
 
-if (typeof module !== 'undefined') module.exports = { nextShowcasePosition, heroScrollState };
+if (typeof module !== 'undefined') module.exports = { nextShowcasePosition, heroScrollState, formatCoordinate };
 
 if (typeof document !== 'undefined') (() => {
+  document.documentElement?.classList.add('has-js');
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const film = document.querySelector('[data-hero-film]');
   if (film) {
@@ -219,5 +224,43 @@ if (typeof document !== 'undefined') (() => {
     }, { threshold: .13 });
     document.querySelectorAll('[data-reveal]').forEach(element => observer.observe(element));
     motion.addEventListener('change', event => { if (event.matches) { observer.disconnect(); document.getAnimations().forEach(animation => animation.cancel()); } });
+  }
+
+  const drawables = [...document.querySelectorAll('[data-reveal], .category-card, .media-frame, .showcase-card')];
+  if (drawables.length) {
+    const drawAll = () => drawables.forEach(element => element.classList.add('is-drawn'));
+    if (motion.matches || !('IntersectionObserver' in window)) drawAll();
+    else {
+      const drawObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-drawn');
+          drawObserver.unobserve(entry.target);
+        });
+      }, { threshold: .15 });
+      drawables.forEach(element => drawObserver.observe(element));
+      motion.addEventListener('change', event => { if (event.matches) { drawObserver.disconnect(); drawAll(); } });
+    }
+  }
+
+  if (document.body && window.addEventListener && window.matchMedia('(pointer: fine)').matches) {
+    const readout = document.createElement('div');
+    readout.className = 'xy-readout';
+    readout.setAttribute('aria-hidden', 'true');
+    readout.innerHTML = '<span data-x>X 0000.0</span><span data-y>Y 0000.0</span>';
+    document.body.appendChild(readout);
+    const readX = readout.querySelector('[data-x]');
+    const readY = readout.querySelector('[data-y]');
+    let pointer = null;
+    let pointerFrame = 0;
+    const paintPointer = () => {
+      pointerFrame = 0;
+      readX.textContent = formatCoordinate('X', pointer.x);
+      readY.textContent = formatCoordinate('Y', pointer.y);
+    };
+    window.addEventListener('pointermove', event => {
+      pointer = { x: event.clientX + window.scrollX, y: event.clientY + window.scrollY };
+      if (!pointerFrame) pointerFrame = requestAnimationFrame(paintPointer);
+    }, { passive: true });
   }
 })();

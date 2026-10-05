@@ -108,11 +108,10 @@ def shell(title, description, body_class, header, body, footer):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{esc(description)}">
-<meta name="theme-color" content="#1b1613">
+<meta name="theme-color" content="#1b1a17">
 <title>{esc(title)}</title>
 {hero_preload}
-<link rel="preload" href="assets/fonts/oswald.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="preload" href="assets/fonts/manrope.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="assets/fonts/hanken-grotesk.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="styles.css?v={style_version}">
 <script src="site.js?v={script_version}" defer></script>
 </head>
